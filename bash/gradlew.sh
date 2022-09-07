@@ -14,7 +14,7 @@ _gradlew_completions() {
   # Make completions newline separated (that's fish command, and easier to manipulate)
   local IFS=$'\n'
   # shellcheck disable=2207
-  COMPREPLY=($(compgen -W "$(cat "$cache_file" | sed 's/\t/ - /')" "${COMP_WORDS[1]}"))
+  COMPREPLY=($(compgen -W "$(cat "$cache_file" | sed 's/\t/ - /')" "${COMP_WORDS[-1]}"))
 
   # If there's only one (i.e. it's gonna accept immediately instead of showing a list)
   if [[ ${#COMPREPLY[*]} -eq 1 ]]; then 
