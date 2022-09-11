@@ -1,5 +1,6 @@
 #!/usr/bin/env fish
 
+# TODO: Add an fzf version as for bash
 function _gradlew_complete
   set current_dir (basename "$PWD")
   set cache_file "/tmp/completions/cache/gradlew/$current_dir"

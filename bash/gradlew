@@ -1,5 +1,14 @@
 #!/usr/bin/env bash
 _gradlew_completions() {
+  cue="${COMP_WORDS[-1]}"
+  trigger="${FZF_COMPLETION_TRIGGER:-**}"
+
+  # If the cue ends with **, trigger fzf completion
+  if [[ "$cue" == "$trigger" ]]; then
+    _gradlew_fzf_completions "${cue%%**}"
+    return
+  fi
+
   current_dir=$(basename "$PWD")
   cache_file="/tmp/completions/cache/gradlew/$current_dir"
 
@@ -14,13 +23,33 @@ _gradlew_completions() {
   # Make completions newline separated (that's fish command, and easier to manipulate)
   local IFS=$'\n'
   # shellcheck disable=2207
-  COMPREPLY=($(compgen -W "$(cat "$cache_file" | sed 's/\t/ - /')" "${COMP_WORDS[-1]}"))
+  COMPREPLY=($(compgen -W "$(cat "$cache_file" | sed 's/\t/ - /')" "$cue"))
 
   # If there's only one (i.e. it's gonna accept immediately instead of showing a list)
   if [[ ${#COMPREPLY[*]} -eq 1 ]]; then 
     COMPREPLY=( "${COMPREPLY[0]%% - *}" ) # Then, remove the description (- and everything after it)
   fi
 
+}
+
+# TODO: Use cache
+# TODO: Remove description from completion
+# TODO: Find out what warning 2207 means
+_gradlew_fzf_completions() {
+  IFS=$'\n'
+
+  cue="$1"
+  starting_options=($(compgen -W "$(./gradlew tasks |  grep -Po "\S+ - (\S+\s?)*")" "$cue"))
+
+  if [[ ${#starting_options[*]} -eq 1 ]]; then
+    COMPREPLY=("${starting_options[0]}")
+  else
+    chosen_option=$(echo "${starting_options[*]}" \
+      | fzf --query="$cue" \
+            --height=25% \
+            --tiebreak=begin)
+    COMPREPLY=("$chosen_option")
+  fi
 }
 
 complete -F _gradlew_completions gradlew
