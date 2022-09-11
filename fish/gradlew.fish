@@ -2,7 +2,7 @@
 
 function _gradlew_complete
   set current_dir (basename "$PWD")
-  set cache_file "/tmp/completions/gradlew/$current_dir"
+  set cache_file "/tmp/completions/cache/gradlew/$current_dir"
 
   if ! find "$cache_file" -newer ./build.gradle.kts 2&> /dev/null
     mkdir -p $(dirname "$cache_file")

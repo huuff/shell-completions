@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 _gradlew_completions() {
   current_dir=$(basename "$PWD")
-  cache_file="/tmp/completions/gradlew/$current_dir"
+  cache_file="/tmp/completions/cache/gradlew/$current_dir"
 
   # If the results aren't cached, or stale (buildscript was changed after the time it was cached),
   # then, cache it again
