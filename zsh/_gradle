@@ -1,4 +1,4 @@
-#compdef gradlew
+#compdef gradlew gradle
 
 # TODO: Use cache (zsh's own completion cache?)
 # TODO: fzf
