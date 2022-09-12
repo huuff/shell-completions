@@ -1,10 +1,8 @@
-#compdef _gradlew_complete gradlew
+#compdef gradlew
 
 # TODO: Use cache (zsh's own completion cache?)
 # TODO: fzf
-function _gradlew_complete {
-  IFS=$'\n'
-  local tasks=($(./gradlew tasks | grep -Po "\S+ - (\S+\s?)*" | sed -E 's/(\S+) - ((\S+\s?)*)/\1:\2/'))
+local IFS=$'\n'
+local tasks=($(./gradlew tasks | grep -Po "\S+ - (\S+\s?)*" | sed -E 's/(\S+) - ((\S+\s?)*)/\1:\2/'))
 
-  _describe 'command' tasks
-}
+_describe 'command' tasks
