@@ -7,11 +7,11 @@ function _gradlew_complete
 
   if ! find "$cache_file" -newer ./build.gradle.kts 2&> /dev/null
     mkdir -p $(dirname "$cache_file")
-    set tasks "$(./gradlew tasks | grep -Po "\S+ - (\S+\s?)*" | sed 's/ - /\t/')"
+    set tasks "$(./gradlew tasks | grep -Po "\S+ - (\S+\s?)*")"
     echo "$tasks" | tee "$cache_file"
   end
 
-  cat "$cache_file"
+  cat "$cache_file" | sed 's/ - /\t/'
 end
 
 
