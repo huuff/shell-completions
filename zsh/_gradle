@@ -1,6 +1,7 @@
 #compdef gradlew gradle
 
 # TODO: fzf
+# TODO: Use zsh's own cache? But this won't be shareable among shells
 
 zstyle ':completion:*:*:(gradle|gradlew):*' menu yes select
 
