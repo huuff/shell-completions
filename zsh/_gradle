@@ -1,8 +1,17 @@
 #compdef gradlew gradle
 
-# TODO: Use cache (zsh's own completion cache?)
 # TODO: fzf
+
+zstyle ':completion:*:*:(gradle|gradlew):*' menu yes select
+
+local -r current_dir="$(basename "$PWD")"
+local -r cache_file="/tmp/completions/cache/gradlew/$current_dir"
+
+if [[ ! $(find "$cache_file" -newer ./build.gradle.kts -print 2>/dev/null) ]]; then
+  echo "$(./gradlew tasks | grep -Po "\S+ - (\S+\s?)*")" > "$cache_file"
+fi
+
 local IFS=$'\n'
-local tasks=($(./gradlew tasks | grep -Po "\S+ - (\S+\s?)*" | sed -E 's/(\S+) - ((\S+\s?)*)/\1:\2/'))
+local -r tasks=($(cat "$cache_file" | sed -E 's/(\S+) - ((\S+\s?)*)/\1:\2/'))
 
 _describe 'command' tasks
