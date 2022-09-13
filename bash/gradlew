@@ -40,16 +40,12 @@ _gradlew_fzf_completions() {
 
   local IFS=$'\n'
   local -r starting_options=($(compgen -W "$(cat "$cache_file")" "$cue"))
-
-  if [[ ${#starting_options[*]} -eq 1 ]]; then
-    COMPREPLY=("${starting_options[0]}")
-  else
-    local -r chosen_option=$(echo "${starting_options[*]}" \
-      | fzf --query="$cue" \
-            --height=25% \
-            --tiebreak=begin)
-    COMPREPLY=($(grep -Po "^\S+" <<<"$chosen_option"))
-  fi
+  local -r chosen_option=$(echo "${starting_options[*]}" \
+    | fzf --query="$cue" \
+          --select-1 \
+          --height=25% \
+          --tiebreak=begin)
+  COMPREPLY=($(grep -Po "^\S+" <<<"$chosen_option"))
 }
 
 complete -F _gradlew_completions gradlew
