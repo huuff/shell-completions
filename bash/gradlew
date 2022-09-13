@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# XXX: Weird `mapfile` calls to prevent https://www.shellcheck.net/wiki/SC2207
+# correct bash is ugly as sin
+
 # shellcheck disable=2155
 _gradlew_completions() {
   local cue="${COMP_WORDS[-1]}"
@@ -20,9 +23,7 @@ _gradlew_completions() {
     _gradlew_fzf_completions "${cue%%\*\*}" "$cache_file"
   else
     # Make completions newline separated (that's fish's way, and easier to manipulate)
-    local IFS=$'\n'
-    # shellcheck disable=2207
-    COMPREPLY=($(compgen -W "$(grep -Po "^\S+" <"$cache_file")" "$cue"))
+    mapfile -t COMPREPLY < <(compgen -W "$(grep -Po "^\S+" <"$cache_file")" "$cue")
 
     # If there's only one (i.e. it's gonna accept immediately instead of showing a list)
     if [[ ${#COMPREPLY[*]} -eq 1 ]]; then 
@@ -31,19 +32,19 @@ _gradlew_completions() {
   fi
 }
 
-# TODO: Find out what warning 2207 means
 # TODO: For some reason, using this hides what was previously written in the cli
 _gradlew_fzf_completions() {
   local -r cue="$1"
   local -r cache_file="$2"
 
   local IFS=$'\n'
-  local -r starting_options=($(compgen -W "$(cat "$cache_file")" "$cue"))
+  mapfile -t starting_options < <(compgen -W "$(cat "$cache_file")" "$cue")
   local -r chosen_option=$(fzf --query="$cue" \
           --select-1 \
           --height=25% \
           --tiebreak=begin <<<"${starting_options[*]}")
-  COMPREPLY=($(grep -Po "^\S+" <<<"$chosen_option"))
+
+  COMPREPLY=("$(grep -Po "^\S+" <<<"$chosen_option")")
 }
 
 complete -F _gradlew_completions gradlew
