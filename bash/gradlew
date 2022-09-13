@@ -17,7 +17,7 @@ _gradlew_completions() {
 
   # If the cue ends with **, trigger fzf completion
   if [[ "$cue" == *"$trigger" ]]; then
-    _gradlew_fzf_completions "${cue%%**}" "$cache_file"
+    _gradlew_fzf_completions "${cue%%\*\*}" "$cache_file"
     return
   else
     # Make completions newline separated (that's fish's way, and easier to manipulate)
@@ -33,6 +33,7 @@ _gradlew_completions() {
 }
 
 # TODO: Find out what warning 2207 means
+# TODO: For some reason, using this hides what was previously written in the cli
 _gradlew_fzf_completions() {
   local -r cue="$1"
   local -r cache_file="$2"
