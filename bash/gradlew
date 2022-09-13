@@ -14,7 +14,8 @@ _gradlew_completions() {
   # then, cache it again
   if [[ ! $(find "$cache_file" -newer ./build.gradle.kts -print 2>/dev/null) ]]; then
     mkdir -p "$(dirname "$cache_file")"
-    local -r tasks=$(./gradlew tasks | grep -Po "\S+ - (\S+\s?)*")
+    local -r executable="${COMP_WORDS[0]}"
+    local -r tasks=$("$executable" tasks | grep -Po "\S+ - (\S+\s?)*")
     echo "$tasks" > "$cache_file"
   fi
 
@@ -47,4 +48,4 @@ _gradlew_fzf_completions() {
   COMPREPLY=("$(grep -Po "^\S+" <<<"$chosen_option")")
 }
 
-complete -F _gradlew_completions gradlew
+complete -F _gradlew_completions gradlew gradle
