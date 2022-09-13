@@ -1,54 +1,53 @@
 #!/usr/bin/env bash
+
+# shellcheck disable=2155
 _gradlew_completions() {
-  cue="${COMP_WORDS[-1]}"
-  trigger="${FZF_COMPLETION_TRIGGER:-**}"
-
-  # If the cue ends with **, trigger fzf completion
-  if [[ "$cue" == "$trigger" ]]; then
-    _gradlew_fzf_completions "${cue%%**}"
-    return
-  fi
-
-  current_dir=$(basename "$PWD")
-  cache_file="/tmp/completions/cache/gradlew/$current_dir"
+  local cue="${COMP_WORDS[-1]}"
+  local -r trigger="${FZF_COMPLETION_TRIGGER:-**}"
+  local -r current_dir=$(basename "$PWD")
+  local -r cache_file="/tmp/completions/cache/gradlew/$current_dir"
 
   # If the results aren't cached, or stale (buildscript was changed after the time it was cached),
   # then, cache it again
   if [[ ! $(find "$cache_file" -newer ./build.gradle.kts -print 2>/dev/null) ]]; then
     mkdir -p "$(dirname "$cache_file")"
-    tasks=$(./gradlew tasks | grep -Po "\S+ - (\S+\s?)*" | sed 's/ - /\t/')
+    local -r tasks=$(./gradlew tasks | grep -Po "\S+ - (\S+\s?)*")
     echo "$tasks" > "$cache_file"
   fi
 
-  # Make completions newline separated (that's fish command, and easier to manipulate)
-  local IFS=$'\n'
-  # shellcheck disable=2207
-  COMPREPLY=($(compgen -W "$(cat "$cache_file" | sed 's/\t/ - /')" "$cue"))
+  # If the cue ends with **, trigger fzf completion
+  if [[ "$cue" == "$trigger" ]]; then
+    _gradlew_fzf_completions "${cue%%**}" "$cache_file"
+    return
+  else
+    # Make completions newline separated (that's fish's way, and easier to manipulate)
+    local IFS=$'\n'
+    # shellcheck disable=2207
+    COMPREPLY=($(compgen -W "$(grep -Po "^\S+" <"$cache_file")" "$cue"))
 
-  # If there's only one (i.e. it's gonna accept immediately instead of showing a list)
-  if [[ ${#COMPREPLY[*]} -eq 1 ]]; then 
-    COMPREPLY=( "${COMPREPLY[0]%% - *}" ) # Then, remove the description (- and everything after it)
+    # If there's only one (i.e. it's gonna accept immediately instead of showing a list)
+    if [[ ${#COMPREPLY[*]} -eq 1 ]]; then 
+      COMPREPLY=( "${COMPREPLY[0]%% - *}" ) # Then, remove the description (- and everything after it)
+    fi
   fi
-
 }
 
-# TODO: Use cache
-# TODO: Remove description from completion
 # TODO: Find out what warning 2207 means
 _gradlew_fzf_completions() {
-  IFS=$'\n'
+  local -r cue="$1"
+  local -r cache_file="$2"
 
-  cue="$1"
-  starting_options=($(compgen -W "$(./gradlew tasks |  grep -Po "\S+ - (\S+\s?)*")" "$cue"))
+  local IFS=$'\n'
+  local -r starting_options=($(compgen -W "$(cat "$cache_file")" "$cue"))
 
   if [[ ${#starting_options[*]} -eq 1 ]]; then
     COMPREPLY=("${starting_options[0]}")
   else
-    chosen_option=$(echo "${starting_options[*]}" \
+    local -r chosen_option=$(echo "${starting_options[*]}" \
       | fzf --query="$cue" \
             --height=25% \
             --tiebreak=begin)
-    COMPREPLY=("$chosen_option")
+    COMPREPLY=($(grep -Po "^\S+" <<<"$chosen_option"))
   fi
 }
 
