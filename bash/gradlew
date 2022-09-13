@@ -16,7 +16,7 @@ _gradlew_completions() {
   fi
 
   # If the cue ends with **, trigger fzf completion
-  if [[ "$cue" == "$trigger" ]]; then
+  if [[ "$cue" == *"$trigger" ]]; then
     _gradlew_fzf_completions "${cue%%**}" "$cache_file"
     return
   else
