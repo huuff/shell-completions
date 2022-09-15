@@ -45,7 +45,7 @@ _gradle_completions() {
   else
 
     if [[ "$cue" == -* ]]; then # option completion
-      mapfile -t COMPREPLY < <(compgen -W "${_dash_options[*]}" -- "$cue")
+      mapfile -t COMPREPLY < <(compgen -W "${_gradle_completion_options[*]}" -- "$cue")
     else # subcommand completion
       # Make completions newline separated (that's fish's way, and easier to manipulate)
       mapfile -t COMPREPLY < <(compgen -W "$(grep -Po "^\S+" <"$cache_file")" "$cue")
