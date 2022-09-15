@@ -35,7 +35,7 @@ _gradlew_completions() {
   if [[ ! $(find "$cache_file" -newer ./build.gradle.kts -print 2>/dev/null) ]]; then
     mkdir -p "$(dirname "$cache_file")"
     local -r executable="${COMP_WORDS[0]}"
-    local -r tasks=$("$executable" tasks | grep -Po "\S+ - (\S+\s?)*")
+    local -r tasks=$("$executable" tasks | grep -Po "\S+ - .*")
     echo "$tasks" > "$cache_file"
   fi
 
@@ -59,7 +59,7 @@ _gradlew_fzf_completions() {
   local -r cache_file="$2"
 
   local IFS=$'\n'
-  mapfile -t starting_options < <(compgen -W "$(cat "$cache_file")" "$cue")
+  mapfile -t starting_options < <(compgen -W "$(column -s "-" -t <"$cache_file")" "$cue")
   local -r chosen_option=$(fzf --query="$cue" \
           --select-1 \
           --height=25% \
