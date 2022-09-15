@@ -2,6 +2,26 @@
 
 # XXX: Weird `mapfile` calls to prevent https://www.shellcheck.net/wiki/SC2207
 # correct bash is ugly as sin
+_dash_options=(
+  "--version"
+  "--parallel"
+  "--status"
+  "--stop"
+  
+  "--quiet"
+  "--warn"
+  "--info"
+  "--debug"
+
+  "--dry-run"
+  "--continuous"
+
+  "--rerun-tasks"
+  "--continue"
+
+  "-D"
+  "-P"
+)
 
 # shellcheck disable=2155
 _gradlew_completions() {
@@ -23,12 +43,18 @@ _gradlew_completions() {
   if [[ "$cue" == *"$trigger" ]]; then
     _gradlew_fzf_completions "${cue%%\*\*}" "$cache_file"
   else
-    # Make completions newline separated (that's fish's way, and easier to manipulate)
-    mapfile -t COMPREPLY < <(compgen -W "$(grep -Po "^\S+" <"$cache_file")" "$cue")
 
-    # If there's only one (i.e. it's gonna accept immediately instead of showing a list)
-    if [[ ${#COMPREPLY[*]} -eq 1 ]]; then 
-      COMPREPLY=( "${COMPREPLY[0]%% - *}" ) # Then, remove the description (- and everything after it)
+    if [[ "$cue" == -* ]]; then # option completion
+      mapfile -t COMPREPLY < <(compgen -W "${_dash_options[*]}" -- "$cue")
+    else # subcommand completion
+      # Make completions newline separated (that's fish's way, and easier to manipulate)
+      mapfile -t COMPREPLY < <(compgen -W "$(grep -Po "^\S+" <"$cache_file")" "$cue")
+
+      # TODO: Below is no longer necessary, right?
+      # If there's only one (i.e. it's gonna accept immediately instead of showing a list)
+      if [[ ${#COMPREPLY[*]} -eq 1 ]]; then 
+        COMPREPLY=( "${COMPREPLY[0]%% - *}" ) # Then, remove the description (- and everything after it)
+      fi
     fi
   fi
 }
