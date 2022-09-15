@@ -11,10 +11,10 @@ local -r cache_file="/tmp/completions/cache/gradlew/$current_dir"
 if [[ ! $(find "$cache_file" -newer ./build.gradle.kts -print 2>/dev/null) ]]; then
   mkdir -p "$(dirname "$cache_file")"
   local -r executable="${words[1]}"
-  echo "$("$executable" tasks | grep -Po "\S+ - (\S+\s?)*")" > "$cache_file"
+  echo "$("$executable" tasks | grep -Po "\S+ - .*")" > "$cache_file"
 fi
 
 local IFS=$'\n'
-local -r tasks=($(cat "$cache_file" | sed -E 's/(\S+) - ((\S+\s?)*)/\1:\2/'))
+local -r tasks=($(cat "$cache_file" | sed -E 's/(\S+) - (.*)/\1:\2/'))
 
 _describe 'command' tasks

@@ -2,7 +2,7 @@
 
 # XXX: Weird `mapfile` calls to prevent https://www.shellcheck.net/wiki/SC2207
 # correct bash is ugly as sin
-_dash_options=(
+_gradle_completion_options=(
   "--version"
   "--parallel"
   "--status"
@@ -24,7 +24,7 @@ _dash_options=(
 )
 
 # shellcheck disable=2155
-_gradlew_completions() {
+_gradle_completions() {
   local cue="${COMP_WORDS[-1]}"
   local -r trigger="${FZF_COMPLETION_TRIGGER:-**}"
   local -r current_dir=$(basename "$PWD")
@@ -54,7 +54,7 @@ _gradlew_completions() {
 }
 
 # TODO: For some reason, using this hides what was previously written in the cli
-_gradlew_fzf_completions() {
+_gradle_fzf_completions() {
   local -r cue="$1"
   local -r cache_file="$2"
 
@@ -68,4 +68,4 @@ _gradlew_fzf_completions() {
   COMPREPLY=("$(grep -Po "^\S+" <<<"$chosen_option")")
 }
 
-complete -F _gradlew_completions gradlew gradle
+complete -F _gradle_completions gradlew gradle
