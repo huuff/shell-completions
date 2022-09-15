@@ -1,5 +1,3 @@
-#!/usr/bin/env fish
-
 # TODO: Add an fzf version as for bash
 function _gradle_complete
   set current_dir (basename "$PWD")
@@ -16,5 +14,4 @@ function _gradle_complete
 end
 
 
-complete --command gradlew --arguments '(_gradle_complete)' --no-files
-complete --command gradle --arguments '(_gradle_complete)' --no-files
+complete --command gradlew --command gradle --arguments '(_gradle_complete)' --no-files
