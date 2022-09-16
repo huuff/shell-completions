@@ -1,71 +1,82 @@
 #!/usr/bin/env bash
 
-# XXX: Weird `mapfile` calls to prevent https://www.shellcheck.net/wiki/SC2207
-# correct bash is ugly as sin
-_gradle_completion_options=(
-  "--version"
-  "--parallel"
-  "--status"
-  "--stop"
-  
-  "--quiet"
-  "--warn"
-  "--info"
-  "--debug"
-
-  "--dry-run"
-  "--continuous"
-
-  "--rerun-tasks"
-  "--continue"
-
-  "-D"
-  "-P"
-)
-
-# shellcheck disable=2155
 _gradle_completions() {
-  local cue="${COMP_WORDS[-1]}"
-  local -r trigger="${FZF_COMPLETION_TRIGGER:-**}"
-  local -r current_dir=$(basename "$PWD")
-  local -r cache_file="/tmp/completions/cache/gradlew/$current_dir"
+  local -r fzf_trigger="${FZF_COMPLETION_TRIGGER:-**}"
+  local -r cache_file="/tmp/completions/cache/gradle$PWD"
+  local -r cue="${COMP_WORDS[-1]}"
 
-  # If the results aren't cached, or stale (buildscript was changed after the time it was cached),
-  # then, cache it again
-  if [[ ! $(find "$cache_file" -newer ./build.gradle.kts -print 2>/dev/null) ]]; then
-    mkdir -p "$(dirname "$cache_file")"
-    local -r executable="${COMP_WORDS[0]}"
-    local -r tasks=$("$executable" tasks | grep -Po "\S+ - .*")
-    echo "$tasks" > "$cache_file"
+  if [[ "$cue" == -* ]]; then # It's an option
+    _gradle_option_completion "$cue"
+  else # Its a task
+    _gradle_task_completion "$cue" "$cache_file" "$fzf_trigger"
   fi
 
-  # If the cue ends with **, trigger fzf completion
-  if [[ "$cue" == *"$trigger" ]]; then
-    _gradlew_fzf_completions "${cue%%\*\*}" "$cache_file"
-  else
-
-    if [[ "$cue" == -* ]]; then # option completion
-      mapfile -t COMPREPLY < <(compgen -W "${_gradle_completion_options[*]}" -- "$cue")
-    else # subcommand completion
-      # Make completions newline separated (that's fish's way, and easier to manipulate)
-      mapfile -t COMPREPLY < <(compgen -W "$(grep -Po "^\S+" <"$cache_file")" "$cue")
-    fi
-  fi
 }
 
-# TODO: For some reason, using this hides what was previously written in the cli
-_gradle_fzf_completions() {
+# TASK COMPLETION
+_gradle_task_completion() {
+  local -r cue="$1"
+  local -r cache_file="$2"
+  local -r fzf_trigger="$3"
+
+  # If the results aren't cached or stale (buildscript was changed after the time it was cached),
+  # then, cache it again
+  if [[ ! $(find "$cache_file" -newer "$PWD/build.gradle.kts" -print 2>/dev/null) ]]; then
+    mkdir -p "$(dirname "$cache_file")"
+    local -r executable="${COMP_WORDS[0]}"
+    "$executable" tasks | grep -Po "\S+ - .*" > "$cache_file"
+  fi
+
+  if [[ "$cue" == *"$fzf_trigger" ]]; then # It's an fzf completion
+    _gradle_fzf_task_completion "${cue%%\*\*}"  "$cache_file"
+  else
+    mapfile -t COMPREPLY < <(compgen -W "$(grep -Po "^\S+" <"$cache_file")" "$cue")
+  fi
+
+}
+
+_gradle_fzf_task_completion() {
   local -r cue="$1"
   local -r cache_file="$2"
 
   local IFS=$'\n'
-  mapfile -t starting_options < <(compgen -W "$(column -s "-" -t <"$cache_file")" "$cue")
-  local -r chosen_option=$(fzf --query="$cue" \
-          --select-1 \
-          --height=25% \
-          --tiebreak=begin <<<"${starting_options[*]}")
+  mapfile -t options < <(compgen -W "$(column -s "-" -t <"$cache_file")" "$cue")
+  local -r chosen_option=$(fzf --query "$cue" \
+    --select-1 \
+    --bind=tab:up \
+    --cycle \
+    --height=25% \
+    --tiebreak=begin <<<"${options[*]}"
+  )
 
   COMPREPLY=("$(grep -Po "^\S+" <<<"$chosen_option")")
 }
 
+_gradle_option_completion() {
+  local -r cue="$1"
+  local -r options=(
+    "--version"
+    "--parallel"
+    "--status"
+    "--stop"
+
+    "--quiet"
+    "--warn"
+    "--info"
+    "--debug"
+
+    "--dry-run"
+    "--continuous"
+
+    "--rerun-tasks"
+    "--continue"
+
+    "-D"
+    "-P"
+  )
+
+  mapfile -t COMPREPLY < <(compgen -W "${options[*]}" -- "$cue")
+}
+
+# LOAD THEM
 complete -F _gradle_completions gradlew gradle
