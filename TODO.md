@@ -5,7 +5,6 @@
 
 ## Gradle
 ### `bash`
-* `fzf` flag completions with descriptions
 * subproject task completion
 
 ### `zsh`

@@ -6,7 +6,7 @@ _gradle_completions() {
   local -r cue="${COMP_WORDS[-1]}"
 
   if [[ "$cue" == -* ]]; then # It's an option
-    _gradle_option_completion "$cue"
+    _gradle_option_completion "$cue" "$fzf_trigger"
   else # Its a task
     _gradle_task_completion "$cue" "$cache_file" "$fzf_trigger"
   fi
@@ -28,54 +28,65 @@ _gradle_task_completion() {
   fi
 
   if [[ "$cue" == *"$fzf_trigger" ]]; then # It's an fzf completion
-    _gradle_fzf_task_completion "${cue%%\*\*}"  "$cache_file"
-  else
+    mapfile -t options < "$cache_file"
+    _gradle_fzf_completion "${cue%%\*\*}" "-" "${options[@]}"
+  else # It's a normal completion
     mapfile -t COMPREPLY < <(compgen -W "$(grep -Po "^\S+" <"$cache_file")" "$cue")
   fi
 
 }
 
-_gradle_fzf_task_completion() {
+# OPTION COMPLETION
+_gradle_option_completion() {
   local -r cue="$1"
-  local -r cache_file="$2"
+  local -r fzf_trigger="$2"
+  local options=(
+    "--version:Print version info"
+    "--parallel:Build projects in parallel"
+    "--status:Show status of Gradle Daemon(s)"
+    "--stop:Stop the Gradle daemon"
+
+    # Log levels
+    "--quiet:Log errors only"
+    "--warn:Set log level to warn"
+    "--info:Set log level to info"
+    "--debug:Log in debug mode"
+
+    "--dry-run:Run the builds with all task actions disabled"
+    "--continuous:Enables continuous build"
+
+    "--rerun-tasks:Ignore previously cached task results"
+    "--exclude-task:Specify a task to be excluded from execution"
+    "--continue:Continue task execution after a task failure"
+
+    "-D:Set JVM's system property"
+    "-P:Set project property of the build script"
+  )
+
+  if [[ "$cue" == *"$fzf_trigger" ]]; then # It's an fzf completion
+    _gradle_fzf_completion "${cue%%\*\*}" ":" "${options[@]}"
+  else # It's a normal completion
+    mapfile -t COMPREPLY < <(compgen -W "${options[*]/%:*/}" -- "$cue")
+  fi
+
+}
+
+_gradle_fzf_completion() {
+  local -r cue="$1"
+  local -r option_description_delimiter="$2"
+  options=("${@:3}")
 
   local IFS=$'\n'
-  mapfile -t options < <(compgen -W "$(column -s "-" -t <"$cache_file")" "$cue")
+  mapfile -t options < <(compgen -W "$(column -s "$option_description_delimiter" -t <<<"${options[*]}")" -- "$cue")
   local -r chosen_option=$(fzf --query "$cue" \
     --select-1 \
     --bind=tab:up \
     --cycle \
     --height=25% \
-    --tiebreak=begin <<<"${options[*]}"
+    --tiebreak=begin <<<"${options[*]}" | grep -Po "^\S+"
   )
-
-  COMPREPLY=("$(grep -Po "^\S+" <<<"$chosen_option")")
-}
-
-_gradle_option_completion() {
-  local -r cue="$1"
-  local -r options=(
-    "--version"
-    "--parallel"
-    "--status"
-    "--stop"
-
-    "--quiet"
-    "--warn"
-    "--info"
-    "--debug"
-
-    "--dry-run"
-    "--continuous"
-
-    "--rerun-tasks"
-    "--continue"
-
-    "-D"
-    "-P"
-  )
-
-  mapfile -t COMPREPLY < <(compgen -W "${options[*]}" -- "$cue")
+  
+  COMPREPLY=("$chosen_option")
 }
 
 # LOAD THEM
