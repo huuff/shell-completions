@@ -5,10 +5,9 @@
 
 zstyle ':completion:*:*:(gradle|gradlew):*' menu yes select
 
-local -r current_dir="$(basename "$PWD")"
-local -r cache_file="/tmp/completions/cache/gradlew/$current_dir"
+local -r cache_file="/tmp/completions/cache/gradle$PWD"
 
-if [[ ! $(find "$cache_file" -newer ./build.gradle.kts -print 2>/dev/null) ]]; then
+if [[ ! $(find "$cache_file" -newer "$PWD/build.gradle.kts" -print 2>/dev/null) ]]; then
   mkdir -p "$(dirname "$cache_file")"
   local -r executable="${words[1]}"
   echo "$("$executable" tasks | grep -Po "\S+ - .*")" > "$cache_file"
